@@ -10,7 +10,11 @@
 <div id="canvas"></div>
 <div id="label-container"></div>
 
+<!-- Tambahkan TensorFlow.js terlebih dahulu -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<!-- Lalu library Teachable Machine -->
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
 <script type="text/javascript">
 const URL = "https://teachablemachine.withgoogle.com/models/4fGOcJ2iq/";
 let model, webcam, labelContainer, maxPredictions;
@@ -24,7 +28,7 @@ async function init() {
 
     const flip = true;
     webcam = new tmImage.Webcam(200, 200, flip);
-    await webcam.setup(); // minta izin kamera
+    await webcam.setup(); // meminta izin kamera
     await webcam.play();
     window.requestAnimationFrame(loop);
 
