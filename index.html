@@ -1,58 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Teachable Machine Webcam</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deteksi Wajah - Teachable Machine</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+  h1 {
+    margin-top: 20px;
+  }
+  button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #45a049;
+  }
+  #canvas {
+    margin-top: 20px;
+  }
+  #label-container {
+    margin-top: 15px;
+    font-size: 18px;
+  }
+  #error-message {
+    color: red;
+    margin-top: 15px;
+  }
+</style>
 </head>
+
 <body>
-<h1>Deteksi Wajah</h1>
-<button type="button" onclick="init()">Mulai Kamera</button>
-<div id="canvas"></div>
-<div id="label-container"></div>
+  <h1>Deteksi Wajah</h1>
+  <button type="button" onclick="init()">🎥 Mulai Kamera</button>
+  <div id="canvas"></div>
+  <div id="label-container"></div>
+  <div id="error-message"></div>
 
-<!-- Tambahkan TensorFlow.js terlebih dahulu -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-<!-- Lalu library Teachable Machine -->
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <!-- Script Teachable Machine -->
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script type="text/javascript">
+    const URL = "https://teachablemachine.withgoogle.com/models/4fGOcJ2iq/";
+    let model, webcam, labelContainer, maxPredictions;
 
-<script type="text/javascript">
-const URL = "https://teachablemachine.withgoogle.com/models/4fGOcJ2iq/";
-let model, webcam, labelContainer, maxPredictions;
+    async function init() {
+      document.getElementById("error-message").innerText = "";
+      try {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
 
-async function init() {
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
+        // load model dan metadata
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
 
-    model = await tmImage.load(modelURL, metadataURL);
-    maxPredictions = model.getTotalClasses();
+        // buat webcam
+        const flip = true;
+        webcam = new tmImage.Webcam(200, 200, flip);
 
-    const flip = true;
-    webcam = new tmImage.Webcam(200, 200, flip);
-    await webcam.setup(); // meminta izin kamera
-    await webcam.play();
-    window.requestAnimationFrame(loop);
+        // meminta izin kamera
+        await webcam.setup();
+        await webcam.play();
+        window.requestAnimationFrame(loop);
 
-    document.getElementById("canvas").appendChild(webcam.canvas);
-    labelContainer = document.getElementById("label-container");
-    for (let i = 0; i < maxPredictions; i++) {
-        labelContainer.appendChild(document.createElement("div"));
+        // tampilkan hasil di halaman
+        document.getElementById("canvas").innerHTML = "";
+        document.getElementById("canvas").appendChild(webcam.canvas);
+        labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+        for (let i = 0; i < maxPredictions; i++) {
+          labelContainer.appendChild(document.createElement("div"));
+        }
+      } catch (error) {
+        console.error(error);
+        document.getElementById("error-message").innerText =
+          "⚠️ Gagal mengakses kamera. Pastikan Anda memberi izin kamera dan menggunakan HTTPS.";
+      }
     }
-}
 
-async function loop() {
-    webcam.update();
-    await predict();
-    window.requestAnimationFrame(loop);
-}
+    async function loop() {
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
+    }
 
-async function predict() {
-    const prediction = await model.predict(webcam.canvas);
-    for (let i = 0; i < maxPredictions; i++) {
-        const classPrediction = prediction[i].className + ": " +
-            (prediction[i].probability * 100).toFixed(2) + "%";
+    async function predict() {
+      const prediction = await model.predict(webcam.canvas);
+      for (let i = 0; i < maxPredictions; i++) {
+        const classPrediction =
+          prediction[i].className + ": " +
+          (prediction[i].probability * 100).toFixed(2) + "%";
         labelContainer.childNodes[i].innerHTML = classPrediction;
+      }
     }
-}
-</script>
+  </script>
 </body>
 </html>
